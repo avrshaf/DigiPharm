@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiPharm - Order Tracking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --primary-blue: #a4bdf6; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: white; padding-bottom: 50px; }
+
+        .navbar { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 23px 8%; background: white; border-bottom: 1px solid #eee;
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .logo img { height: 35px; }
+        .nav-links { display: flex; gap: 40px; position: absolute; left: 50%; transform: translateX(-50%); }
+        .nav-links a { text-decoration: none; color: #000; font-weight: 600; font-size: 0.95rem; }
+        .cart-icon { font-size: 1.3rem; color: black; text-decoration: none; }
+
+        .header-blue { 
+            background-color: var(--primary-blue); padding: 60px 8%; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .header-left i { font-size: 3.5rem; }
+        .header-left h1 { font-weight: 800; font-size: 2.8rem; }
+        .header-blue p { text-align: right; font-weight: 600; max-width: 300px; }
+
+        .tracking-container { padding: 40px 8%; max-width: 1000px; margin: 0 auto; }
+        .order-group { margin-bottom: 50px; }
+        .order-meta { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px; }
+        .main-box { border: 8px solid var(--primary-blue); border-radius: 12px; overflow: hidden; background: white; }
+        .status-box { padding: 40px; border-bottom: 8px solid var(--primary-blue); }
+        
+        .timeline { margin: 25px 0; border-left: 3px solid #ddd; padding-left: 20px; }
+        .time-item { margin-bottom: 15px; position: relative; }
+        .time-item::before { content: ''; position: absolute; left: -26px; top: 5px; width: 10px; height: 10px; background: #ddd; border-radius: 50%; }
+        .time-item.active::before { background: var(--primary-blue); box-shadow: 0 0 8px var(--primary-blue); }
+
+        .items-list { padding: 40px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .item-left { display: flex; align-items: center; gap: 20px; }
+        .item-left img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; }
+        
+        /* Tombol disembunyikan di awal */
+        .btn-collected { 
+            background: #28a745; color: white; border: none; padding: 12px 25px; 
+            border-radius: 10px; font-weight: 800; cursor: pointer; 
+            display: none; 
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo"><img src="logo_utama.png" alt="Logo"></div>
+        <nav class="nav-links">
+            <a href="catalog.html">Medications</a>
+            <a href="facilities.html">Nearest Health Facility</a>
+            <a href="tracking.html" style="color:var(--primary-blue)">Orders</a>
+            <a href="about.html">About</a>
+        </nav>
+        <a href="cart.html" class="cart-icon"><i class="fa-solid fa-cart-shopping"></i></a>
+    </header>
+
+    <div class="header-blue">
+        <div class="header-left">
+            <i class="fa-solid fa-box-open"></i>
+            <h1>Order Tracking</h1>
+        </div>
+        <p>Monitor your orders in real-time</p>
+    </div>
+
+    <div class="tracking-container" id="list"></div>
+
+    <script>
+        function render() {
+            const history = JSON.parse(localStorage.getItem('digipharm_history')) || [];
+            const container = document.getElementById('list');
+
+            if (history.length === 0) {
+                container.innerHTML = "<h3 style='text-align:center; margin-top:50px; color:#999;'>No active orders.</h3>";
+                return;
+            }
+
+            container.innerHTML = history.map((order, idx) => `
+                <div class="order-group">
+                    <div class="order-meta">
+                        <div><h2 style="font-weight:800">${order.id}</h2><p style="font-size:0.85rem; color:#666; font-weight:600;">${order.date}</p></div>
+                        <div style="text-align:right; font-weight:800; font-size:1.4rem;">IDR ${order.total.toLocaleString()}</div>
+                    </div>
+                    <div class="main-box">
+                        <div class="status-box">
+                            <h2 style="font-weight:800; font-size:2rem;" id="t-${idx}">Packing</h2>
+                            <div class="timeline">
+                                <div class="time-item active"><h4>Order placed</h4><p>${order.date}</p></div>
+                                <div class="time-item" id="s2-${idx}"><h4>Medicine Dispatched</h4><p id="p2-${idx}">In progress...</p></div>
+                                <div class="time-item" id="s3-${idx}"><h4>Ready</h4><p id="p3-${idx}">Pending</p></div>
+                            </div>
+                            <div style="font-weight:800; display:flex; align-items:center; gap:10px;">
+                                <i class="fa-solid fa-location-dot"></i> 
+                                ${order.deliveryMethod || 'Pickup at Pharmacy'} 
+                            </div>
+                        </div>
+                        <div class="items-list">
+                            ${order.items.map(item => `
+                                <div class="item-row">
+                                    <div class="item-left">
+                                        <img src="https://www.icapsulepack.com/wp-content/uploads/2023/04/Drug-and-Medicine-2.jpg">
+                                        <div><h4 style="font-weight:800; text-transform:capitalize;">${item.id}</h4><p>Qty: ${item.qty}</p></div>
+                                    </div>
+                                    <div style="font-weight:800;">IDR ${(10000 * item.qty).toLocaleString()}</div>
+                                </div>
+                            `).join('')}
+                            <button class="btn-collected" id="btn-${idx}" onclick="remove(${idx})">Order Collected</button>
+                        </div>
+                    </div>
+                </div>
+            `).reverse().join('');
+
+            history.forEach((_, idx) => simulateRealtime(idx));
+        }
+
+        function simulateRealtime(idx) {
+            setTimeout(() => {
+                const s2 = document.getElementById(`s2-${idx}`);
+                const t = document.getElementById(`t-${idx}`);
+                const p2 = document.getElementById(`p2-${idx}`);
+                if(s2) {
+                    s2.classList.add('active');
+                    t.innerText = "Medicine Dispatched";
+                    p2.innerText = "Out for delivery / Dispatched";
+                }
+            }, 5000);
+
+            setTimeout(() => {
+                const s3 = document.getElementById(`s3-${idx}`);
+                const t = document.getElementById(`t-${idx}`);
+                const p3 = document.getElementById(`p3-${idx}`);
+                const btn = document.getElementById(`btn-${idx}`);
+                if(s3) {
+                    s3.classList.add('active');
+                    t.innerText = "Ready for Collection";
+                    p3.innerText = "Your order is ready!";
+                    btn.style.display = "block"; 
+                }
+            }, 10000);
+        }
+
+        function remove(idx) {
+            let history = JSON.parse(localStorage.getItem('digipharm_history'));
+            history.splice(history.length - 1 - idx, 1);
+            localStorage.setItem('digipharm_history', JSON.stringify(history));
+            render();
+        }
+
+        window.onload = render;
+    </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiPharm - Facilities</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --primary-blue: #a4bdf6; }
+
+        html { overflow-y: scroll !important; }
+        ::-webkit-scrollbar { width: 16px; }
+        ::-webkit-scrollbar-track { background: #1e1e1e; }
+        ::-webkit-scrollbar-thumb { background: #757575; border-radius: 10px; border: 4px solid #1e1e1e; }
+        ::-webkit-scrollbar-button { background-color: #1e1e1e; background-repeat: no-repeat; background-position: center; height: 16px; }
+        ::-webkit-scrollbar-button:single-button:vertical:decrement { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23757575'><polygon points='50,00 0,100 100,100'/></svg>"); background-size: 10px; }
+        ::-webkit-scrollbar-button:single-button:vertical:increment { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23757575'><polygon points='50,100 0,0 100,0'/></svg>"); background-size: 10px; }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 23px 5%; background: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .logo img { height: 44px; display: block; }
+        .nav-links { display: flex; gap: 35px; }
+        .nav-links a { text-decoration: none; color: #1a1a1a; font-weight: 600; font-size: 0.95rem; }
+        .cart-link { position: relative; font-size: 1.5rem; color: #1a1a1a; text-decoration: none; }
+        .badge { position: absolute; top: -8px; right: -10px; background: red; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 50%; font-weight: 800; display: none; }
+
+        .header-blue { background-color: var(--primary-blue); padding: 40px 8%; display: flex; justify-content: space-between; align-items: center; }
+        .header-blue h1 { font-weight: 800; font-size: 2.2rem; }
+        .header-blue p { font-size: 0.9rem; max-width: 400px; text-align: right; }
+
+        .filter-section { padding: 40px 8% 20px; }
+        .filter-section h2 { font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .filter-btns { display: flex; gap: 15px; }
+        .f-btn { border: none; padding: 10px 25px; border-radius: 10px; font-weight: 600; cursor: pointer; background: var(--primary-blue); transition: 0.3s; }
+        .f-btn.active { background: black; color: white; }
+
+        .facilities-container { padding: 20px 8% 60px; }
+        .facilities-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .fac-card { background-color: var(--primary-blue); padding: 25px; border-radius: 15px; transition: 0.3s; display: flex; flex-direction: column; }
+        .fac-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .fac-card h3 { font-weight: 800; margin-bottom: 15px; font-size: 1.1rem; min-height: 50px; }
+        .fac-info { display: flex; gap: 10px; margin-bottom: 10px; font-size: 0.85rem; line-height: 1.4; }
+        .fac-info i { margin-top: 3px; font-size: 0.9rem; width: 15px; }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo"><a href="index.html"><img src="logo_utama.png" alt="Logo"></a></div>
+        <nav class="nav-links">
+            <a href="catalog.html">Medications</a>
+            <a href="facilities.html" style="color: var(--primary-blue);">Nearest Health Facility</a>
+            <a href="tracking.html">Orders</a>
+            <a href="about.html">About</a>
+        </nav>
+        <a href="cart.html" class="cart-link">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span id="nav-badge" class="badge">0</span>
+        </a>
+    </header>
+
+    <div class="header-blue">
+        <h1>Find Locations</h1>
+        <p>Find nearby pharmacies, hospitals, and healthcare providers</p>
+    </div>
+
+    <div class="filter-section">
+        <h2><i class="fa-solid fa-filter"></i> Filter by Type</h2>
+        <div class="filter-btns">
+            <button class="f-btn active" onclick="filterLocations('all', this)">All locations</button>
+            <button class="f-btn" onclick="filterLocations('hospital', this)">Hospitals</button>
+            <button class="f-btn" onclick="filterLocations('pharmacy', this)">Pharmacies</button>
+            <button class="f-btn" onclick="filterLocations('doctor', this)">Doctors</button>
+        </div>
+    </div>
+
+    <div class="facilities-container">
+        <div class="facilities-grid" id="facilitiesGrid">
+            </div>
+    </div>
+
+    <script>
+        const locations = [
+            // HOSPITALS
+            { type: 'hospital', name: 'RSUD Ulin Banjarmasin', addr: 'Jl. Ahmad Yani No.Km 2.5, Sungai Baru, Banjarmasin', phone: '(0511) 3252180', time: '24 Hours' },
+            { type: 'hospital', name: 'Ciputra Mitra Hospital', addr: 'Citra Land Complex, Jl. Ahmad Yani KM. 7.8, Banjarmasin', phone: '(0511) 6743999', time: '24 Hours' },
+            { type: 'hospital', name: 'RSUD dr. H. Moch. Ansari Saleh', addr: 'Jl. Brigjend H. Hasan Basri No.1, Alalak Utara', phone: '(0511) 3300741', time: '24 Hours' },
+            { type: 'hospital', name: 'RS Bhayangkara Banjarmasin', addr: 'Jl. Ahmad Yani Km 3.5 No. 68, Kebun Bunga', phone: '(0511) 3256671', time: '24 Hours' },
+            
+            // PHARMACIES
+            { type: 'pharmacy', name: 'Ali Pharmacy', addr: 'Jl. Kolonel Sugiono No.26, Pekapuran Laut, Banjarmasin', phone: '(0511) 3254378', time: 'Mon - Sat' },
+            { type: 'pharmacy', name: 'Kimia Farma Pharmacy 120', addr: 'Jl. A. Yani No.Km 3.5, Kebun Bunga, Banjarmasin', phone: '(0511) 3252516', time: '24 Hours' },
+            { type: 'pharmacy', name: 'Murah Sehat Pharmacy', addr: 'Jl. Mayjen Sutoyo S No.3, Tlk. Dalam', phone: '(0511) 4412493', time: 'Daily' },
+            { type: 'pharmacy', name: 'Apotek K-24 Kayutangi', addr: 'Jl. Brigjen H. Hasan Basri, Pangeran', phone: '(0511) 3305333', time: '24 Hours' },
+            
+            // DOCTORS (NEW)
+            { type: 'doctor', name: 'Klinik dr. H. Suriadi Ngallo', addr: 'Jl. Bumi Mas Raya, Pemurus Baru, Banjarmasin', phone: '(0511) 3268444', time: '16:00 - 21:00' },
+            { type: 'doctor', name: 'Praktek Dokter Umum dr. Siti', addr: 'Jl. Sultan Adam No.12, Banjarmasin Utara', phone: '(0812) 5566 7788', time: '08:00 - 12:00' },
+            { type: 'doctor', name: 'Klinik Spesialis Kayutangi', addr: 'Jl. Brigjen H. Hasan Basri, Banjarmasin', phone: '(0511) 3301234', time: '09:00 - 20:00' },
+            { type: 'doctor', name: 'Praktek Mandiri dr. Ahmad', addr: 'Jl. Dahlia No.45, Banjarmasin Tengah', phone: '(0813) 4433 2211', time: '17:00 - 21:00' }
+        ];
+
+        function renderLocations(data) {
+            const grid = document.getElementById('facilitiesGrid');
+            grid.innerHTML = data.map(loc => `
+                <div class="fac-card">
+                    <h3>${loc.name}</h3>
+                    <div class="fac-info"><i class="fa-solid fa-location-dot"></i><p>${loc.addr}</p></div>
+                    <div class="fac-info"><i class="fa-solid fa-phone"></i><p>${loc.phone}</p></div>
+                    <div class="fac-info"><i class="fa-solid fa-clock"></i><p>${loc.time}</p></div>
+                </div>
+            `).join('');
+        }
+
+        function filterLocations(type, btn) {
+            document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            if(type === 'all') {
+                renderLocations(locations);
+            } else {
+                renderLocations(locations.filter(l => l.type === type));
+            }
+        }
+
+        function updateBadge() {
+            const cartData = localStorage.getItem('digipharm_cart');
+            let cart = [];
+            try { cart = JSON.parse(cartData) || []; } catch (e) { cart = []; }
+            let total = cart.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
+            const badge = document.getElementById('nav-badge');
+            if (badge) {
+                badge.innerText = total;
+                badge.style.display = total > 0 ? 'block' : 'none';
+            }
+        }
+
+        window.onload = () => {
+            renderLocations(locations);
+            updateBadge();
+        };
+        window.addEventListener('storage', updateBadge);
+    </script>
+</body>
+</html>

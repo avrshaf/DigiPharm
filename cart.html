@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiPharm - Shopping Cart</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --primary-blue: #a4bdf6; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: white; }
+
+        .navbar { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 23px 8%; background: white; border-bottom: 1px solid #eee;
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .logo img { height: 35px; }
+        .nav-links { display: flex; gap: 40px; position: absolute; left: 50%; transform: translateX(-50%); }
+        .nav-links a { text-decoration: none; color: #000; font-weight: 600; font-size: 0.95rem; }
+        .cart-icon { font-size: 1.3rem; color: black; position: relative; text-decoration: none; }
+        .badge { position: absolute; top: -10px; right: -10px; background: red; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 50%; font-weight: 800; }
+
+        .header-blue { background-color: var(--primary-blue); padding: 50px 8%; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .header-left i { font-size: 2.5rem; }
+        .header-left h1 { font-weight: 800; font-size: 2.5rem; }
+        .header-blue p { text-align: right; font-weight: 600; max-width: 300px; }
+
+        .cart-container { display: flex; padding: 50px 8%; gap: 40px; max-width: 1200px; margin: 0 auto; }
+        .cart-items { flex: 1.5; }
+        .summary-side { flex: 1; }
+
+        .cart-card { background: var(--primary-blue); border-radius: 20px; padding: 20px; display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+        .item-img { width: 100px; height: 100px; background: white; border-radius: 15px; overflow: hidden; }
+        .item-img img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .item-info { flex-grow: 1; }
+        .item-info h3 { font-weight: 800; text-transform: capitalize; }
+        .item-info p { font-weight: 600; }
+
+        .summary-box { background: var(--primary-blue); border-radius: 20px; padding: 30px; position: sticky; top: 120px; }
+        .summary-box h2 { font-weight: 800; font-size: 1.8rem; }
+        .total-white { background: white; padding: 15px; border-radius: 12px; text-align: center; font-weight: 800; margin: 20px 0; font-size: 1.3rem; }
+        
+        .btn-checkout { 
+            background: black; color: white; border: none; width: 100%; 
+            padding: 15px; border-radius: 12px; font-weight: 800; 
+            cursor: pointer; font-size: 1rem; text-transform: lowercase;
+        }
+
+        .qty-controls { display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px; border-radius: 10px; font-weight: 800; }
+        .qty-btn { border: none; background: none; cursor: pointer; font-size: 1.2rem; font-weight: 800; }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo"><img src="logo_utama.png" alt="Logo"></div>
+        <nav class="nav-links">
+            <a href="catalog.html">Medications</a>
+            <a href="facilities.html">Nearest Health Facility</a>
+            <a href="tracking.html">Orders</a>
+            <a href="about.html">About</a>
+        </nav>
+        <a href="cart.html" class="cart-icon"><i class="fa-solid fa-cart-shopping"></i><span class="badge" id="cart-badge">0</span></a>
+    </header>
+
+    <div class="header-blue">
+        <div class="header-left">
+            <a href="catalog.html" style="color:black;"><i class="fa-solid fa-arrow-left"></i></a>
+            <h1>Shopping Cart</h1>
+        </div>
+        <p>Review your items before checkout</p>
+    </div>
+
+    <div class="cart-container">
+        <div class="cart-items" id="cartList"></div>
+        
+        <div class="summary-side">
+            <div class="summary-box">
+                <h2>order summary</h2>
+                <div style="display:flex; justify-content:space-between; margin-top:15px; font-weight:600;">
+                    <span>items</span>
+                    <span id="qty-count">0</span>
+                </div>
+                <div class="total-white" id="total-price">IDR 0</div>
+                <button class="btn-checkout" onclick="goToCheckout()">proceed to checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const IMG = "https://www.icapsulepack.com/wp-content/uploads/2023/04/Drug-and-Medicine-2.jpg";
+
+        function renderCart() {
+            let cart = JSON.parse(localStorage.getItem('digipharm_cart')) || [];
+            const container = document.getElementById('cartList');
+            let total = 0;
+            let qty = 0;
+
+            if (cart.length === 0) {
+                container.innerHTML = "<h3 style='text-align:center; padding:50px;'>Your cart is empty.</h3>";
+                document.getElementById('total-price').innerText = "IDR 0";
+                document.getElementById('qty-count').innerText = "0";
+                document.getElementById('cart-badge').innerText = "0";
+                return;
+            }
+
+            container.innerHTML = cart.map((item, i) => {
+                const harga = 10000; // Standar harga
+                total += (harga * item.qty);
+                qty += item.qty;
+                return `
+                <div class="cart-card">
+                    <div class="item-img"><img src="${IMG}"></div>
+                    <div class="item-info">
+                        <h3>${item.id}</h3>
+                        <p>IDR ${harga.toLocaleString()}</p>
+                    </div>
+                    <div class="qty-controls">
+                        <button class="qty-btn" onclick="updateQty(${i}, -1)">-</button>
+                        <span>${item.qty}</span>
+                        <button class="qty-btn" onclick="updateQty(${i}, 1)">+</button>
+                    </div>
+                    <i class="fa-solid fa-trash" style="cursor:pointer; margin-left:15px;" onclick="updateQty(${i}, -${item.qty})"></i>
+                </div>`;
+            }).join('');
+
+            document.getElementById('total-price').innerText = "IDR " + total.toLocaleString();
+            document.getElementById('qty-count').innerText = qty;
+            document.getElementById('cart-badge').innerText = qty;
+        }
+
+        function updateQty(index, delta) {
+            let cart = JSON.parse(localStorage.getItem('digipharm_cart'));
+            cart[index].qty += delta;
+            if (cart[index].qty < 1) cart.splice(index, 1);
+            localStorage.setItem('digipharm_cart', JSON.stringify(cart));
+            renderCart();
+        }
+
+        function goToCheckout() {
+            let cart = JSON.parse(localStorage.getItem('digipharm_cart')) || [];
+            if (cart.length === 0) {
+                alert("Cart is empty!");
+                return;
+            }
+            window.location.href = 'checkout.html';
+        }
+
+        window.onload = renderCart;
+    </script>
+</body>
+</html>
