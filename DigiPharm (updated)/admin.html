@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiPharm - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --primary-blue: #a4bdf6; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: #f8fafe; padding-bottom: 50px; }
+
+        .admin-header { background-color: black; color: white; padding: 30px 8%; display: flex; justify-content: space-between; align-items: center; }
+        .admin-header h1 { font-weight: 800; font-size: 2rem; }
+        .admin-header span { background: var(--primary-blue); color: black; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.85rem; }
+
+        .admin-container { padding: 40px 8%; max-width: 1300px; margin: 0 auto; }
+        .panel-title { font-weight: 800; font-size: 1.5rem; margin-bottom: 25px; color: #1a1a1a; display: flex; align-items: center; gap: 10px; }
+
+        .order-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .order-table th, .order-table td { padding: 18px 20px; text-align: left; }
+        .order-table th { background-color: var(--primary-blue); font-weight: 800; color: black; font-size: 0.95rem; }
+        .order-table tr { border-bottom: 1px solid #eee; }
+        .order-table tr:last-child { border-bottom: none; }
+        
+        .badge-status { padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; display: inline-block; }
+        .status-packing { background: #ffeeba; color: #9c6f00; }
+        .status-dispatched { background: #bdf0ff; color: #006680; }
+        .status-ready { background: #d4edda; color: #155724; }
+
+        .actions-cell { display: flex; gap: 10px; }
+        .btn-action { border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .btn-dispatch { background: #007bff; color: white; }
+        .btn-ready { background: #28a745; color: white; }
+        .btn-delete { background: #dc3545; color: white; }
+        .btn-action:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-header">
+        <h1>DigiPharm Admin Panel</h1>
+        <span>Seller Mode</span>
+    </div>
+
+    <div class="admin-container">
+        <div class="panel-title"><i class="fa-solid fa-list-check"></i> Incoming Orders Management</div>
+        
+        <table class="order-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Date / Time</th>
+                    <th>Customer Info</th>
+                    <th>Items Purchased</th>
+                    <th>Method</th>
+                    <th>Current Status</th>
+                    <th>Update Status</th>
+                </tr>
+            </thead>
+            <tbody id="admin-order-list">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        function renderAdminPanel() {
+            const history = JSON.parse(localStorage.getItem('digipharm_history')) || [];
+            const tbody = document.getElementById('admin-order-list');
+
+            if (history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#999; padding: 40px;">No incoming orders available.</td></tr>`;
+                return;
+            }
+
+            // Render daftar dari yang paling baru
+            tbody.innerHTML = history.map((order, index) => {
+                // Set default status jika belum ada properti status dari checkout
+                if (!order.status) { order.status = 'Packing'; }
+                
+                let statusClass = 'status-packing';
+                if (order.status === 'Medicine Dispatched') statusClass = 'status-dispatched';
+                if (order.status === 'Ready for Collection') statusClass = 'status-ready';
+
+                const itemsText = order.items.map(i => `${i.qty}x ${i.id}`).join('<br>');
+
+                return `
+                <tr>
+                    <td style="font-weight:800; color:#1a1a1a;">${order.id}</td>
+                    <td style="font-size:0.85rem; color:#666; font-weight:600;">${order.date}</td>
+                    <td style="font-weight:600; font-size:0.9rem;">${order.customer || 'Guest'}<br><span style="color:#777; font-size:0.8rem;">${order.address || ''}</span></td>
+                    <td style="font-size:0.9rem; font-weight:600;">${itemsText}</td>
+                    <td style="font-weight:800; font-size:0.85rem;">${order.deliveryMethod || 'Pickup'}</td>
+                    <td><span class="badge-status ${statusClass}">${order.status}</span></td>
+                    <td class="actions-cell">
+                        ${order.status === 'Packing' ? `
+                            <button class="btn-action btn-dispatch" onclick="updateStatus(${index}, 'Medicine Dispatched')"><i class="fa-solid fa-truck"></i> Dispatch</button>
+                        ` : ''}
+                        ${order.status === 'Medicine Dispatched' ? `
+                            <button class="btn-action btn-ready" onclick="updateStatus(${index}, 'Ready for Collection')"><i class="fa-solid fa-circle-check"></i> Ready</button>
+                        ` : ''}
+                        <button class="btn-action btn-delete" onclick="deleteOrder(${index})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+                `;
+            }).reverse().join('');
+        }
+
+        function updateStatus(originalIndex, newStatus) {
+            let history = JSON.parse(localStorage.getItem('digipharm_history')) || [];
+            
+            // Perbarui status pesanan pada index yang dipilih
+            history[originalIndex].status = newStatus;
+            
+            localStorage.setItem('digipharm_history', JSON.stringify(history));
+            renderAdminPanel();
+        }
+
+        function deleteOrder(originalIndex) {
+            if (confirm("Are you sure you want to delete this order record?")) {
+                let history = JSON.parse(localStorage.getItem('digipharm_history')) || [];
+                history.splice(originalIndex, 1);
+                localStorage.setItem('digipharm_history', JSON.stringify(history));
+                renderAdminPanel();
+            }
+        }
+
+        window.onload = renderAdminPanel;
+    </script>
+</body>
+</html>

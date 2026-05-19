@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiPharm - Detail</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --primary-blue: #a4bdf6; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 23px 5%; background: var(--primary-blue); position: sticky; top: 0; z-index: 1000; }
+        .logo img { height: 44px; }
+        .nav-links a { text-decoration: none; color: #1a1a1a; font-weight: 600; margin-left: 35px; }
+        .badge { position: absolute; top: -8px; right: -10px; background: red; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 50%; font-weight: 800; }
+
+        .container { display: flex; padding: 60px 10%; gap: 60px; align-items: center; }
+        .image-side { flex: 1; text-align: center; }
+        .image-side img { width: 100%; max-width: 450px; border-radius: 15px; }
+
+        .info-side { flex: 1.2; }
+        .info-side h1 { font-size: 2.8rem; font-weight: 800; }
+        .info-side .price { font-size: 2.2rem; font-weight: 800; margin-bottom: 20px; }
+
+        .detail-item { display: flex; gap: 15px; margin-bottom: 20px; }
+        .detail-item i { font-size: 1.5rem; color: black; }
+        .detail-item h4 { font-weight: 800; }
+
+        .add-to-cart-btn {
+            background-color: var(--primary-blue);
+            border: none;
+            width: 100%;
+            padding: 18px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo"><a href="index.html"><img src="logo_utama_nobackground.png" alt="Logo"></a></div>
+        <div class="nav-links">
+            <a href="catalog.html">Medications</a>
+            <a href="facilities.html">Nearest Health Facility</a>
+            <a href="tracking.html">Orders</a>
+            <a href="about.html">About</a>
+        </div>
+        <a href="cart.html" style="position:relative; font-size: 1.5rem; color: black; text-decoration: none;">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span id="nav-badge" class="badge">0</span>
+        </a>
+    </header>
+
+    <div class="container">
+        <div class="image-side"><img id="img" src=""></div>
+        <div class="info-side">
+            <h1 id="name">---</h1>
+            <div id="price" class="price">IDR ---</div>
+            <p style="margin-bottom:25px;">Order medications online with ease. Fast delivery, quality products, and professional pharmaceutical service.</p>
+
+            <div class="detail-item">
+                <i class="fa-solid fa-circle-info"></i>
+                <div><h4>Dosage</h4><p id="dose">---</p></div>
+            </div>
+            <div class="detail-item">
+                <i class="fa-solid fa-circle-info"></i>
+                <div><h4>Usage Instructions</h4><p>Take 1 tablet every 4-6 hours for fever or pain. Max 8 tablets per day.</p></div>
+            </div>
+            <div class="detail-item">
+                <i class="fa-solid fa-circle-info"></i>
+                <div><h4>Important Warnings</h4><p>Caution for patients with liver impairment.</p></div>
+            </div>
+
+            <button class="add-to-cart-btn" onclick="addToCart()">add to cart</button>
+        </div>
+    </div>
+
+    <script>
+        const drugData = {
+            'paracetamol': { name: 'Paracetamol', price: 'IDR 10.000', dose: '500mg' },
+            'ibuprofen': { name: 'Ibuprofen', price: 'IDR 15.000', dose: '400mg' },
+            'mefenamic': { name: 'Mefenamic Acid', price: 'IDR 12.000', dose: '500mg' },
+            'cetirizine': { name: 'Cetirizine', price: 'IDR 20.000', dose: '10mg' },
+            'guaifenesin': { name: 'Guaifenesin', price: 'IDR 8.000', dose: '100mg' },
+            'dextro': { name: 'Dextromethorphan', price: 'IDR 10.000', dose: '15mg' },
+            'amoxicillin': { name: 'Amoxicillin', price: 'IDR 25.000', dose: '500mg' },
+            'vitaminc': { name: 'Vitamin C', price: 'IDR 30.000', dose: '500mg' },
+            'loratadine': { name: 'Loratadine', price: 'IDR 18.000', dose: '10mg' },
+            'omeprazole': { name: 'Omeprazole', price: 'IDR 22.000', dose: '20mg' },
+            'promag': { name: 'Promag', price: 'IDR 8.000', dose: 'Tablet' },
+            'panadolextra': { name: 'Panadol Extra', price: 'IDR 12.000', dose: 'Blister' }
+        };
+
+        window.onload = function() {
+            const id = new URLSearchParams(window.location.search).get('item');
+            const data = drugData[id] || drugData['paracetamol'];
+            document.getElementById('name').innerText = data.name;
+            document.getElementById('price').innerText = data.price;
+            document.getElementById('dose').innerText = data.dose;
+            document.getElementById('img').src = "https://www.icapsulepack.com/wp-content/uploads/2023/04/Drug-and-Medicine-2.jpg";
+            updateBadge();
+        };
+
+        function addToCart() {
+            let cart = JSON.parse(localStorage.getItem('digipharm_cart')) || [];
+            cart.push({ id: Date.now() });
+            localStorage.setItem('digipharm_cart', JSON.stringify(cart));
+            updateBadge();
+        }
+
+        function updateBadge() {
+            let cart = JSON.parse(localStorage.getItem('digipharm_cart')) || [];
+            document.getElementById('nav-badge').innerText = cart.length;
+        }
+    </script>
+</body>
+</html>
